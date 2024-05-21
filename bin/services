@@ -3,17 +3,23 @@
 set -eEuo pipefail
 IFS=$'\n\t'
 
+domain_target="gui/$(id -u)"
+
+plist_path() {
+	echo "$HOME/Library/LaunchAgents/$1.plist"
+}
+
 create() {
-	local name args plist out err arg
-	name=$1
+	local label args plist out err arg
+	label=$1
 	shift
 	args=$*
-	plist="$HOME/Library/LaunchAgents/$name.plist"
+	plist="$(plist_path "$label")"
 	test ! -f "$plist" || exit 0
-	out="$HOME/Library/Logs/$name.out.log"
-	err="$HOME/Library/Logs/$name.err.log"
+	out="$HOME/Library/Logs/$label.out.log"
+	err="$HOME/Library/Logs/$label.err.log"
 	plutil -create xml1 -- "$plist"
-	plutil -insert Label -string "$name" -- "$plist"
+	plutil -insert Label -string "$label" -- "$plist"
 	plutil -insert WorkingDirectory -string "$PWD" -- "$plist"
 	plutil -insert EnvironmentVariables -dictionary -- "$plist"
 	plutil -insert EnvironmentVariables.PATH -string "$PATH" -- "$plist"
@@ -25,7 +31,7 @@ create() {
 		plutil -insert ProgramArguments -string "$arg" -append -- "$plist"
 	done
 	plutil -lint -- "$plist"
-	launchctl load "$plist"
+	launchctl bootstrap "$domain_target" "$plist"
 }
 
 start() {
@@ -37,11 +43,10 @@ stop() {
 }
 
 delete() {
-	local name plist
-	name=$1
-	plist="$HOME/Library/LaunchAgents/$name.plist"
-	launchctl unload "$name"
-	rm "$plist"
+	local label
+	label=$1
+	launchctl bootout "$domain_target/$label"
+	rm "$(plist_path "$label")"
 }
 
 case $1 in

@@ -21,6 +21,7 @@ create() {
 	plutil -create xml1 -- "$plist"
 	plutil -insert Label -string "$label" -- "$plist"
 	plutil -insert WorkingDirectory -string "$PWD" -- "$plist"
+	plutil -insert ProcessType -string 'Adaptive'
 	plutil -insert EnvironmentVariables -dictionary -- "$plist"
 	plutil -insert EnvironmentVariables.PATH -string "$PATH" -- "$plist"
 	touch "$out" "$err"
